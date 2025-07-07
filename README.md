@@ -1,4 +1,4 @@
-# 🕵️‍♂️ Credential Exfiltration (Infostealer) and C2 Persistence
+# 🕵️‍♂️ InfoStealer and C2 Persistence
 
 [![Status](https://img.shields.io/badge/Status-Educational%20Project-blue.svg)](https://www.unb.br/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
