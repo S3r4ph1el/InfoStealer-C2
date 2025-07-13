@@ -88,13 +88,13 @@ resource "aws_security_group" "wazuh_sg" {
     from_port   = 1514 # default port for syslog
     to_port     = 1515
     protocol    = "tcp"
-    cidr_blocks = [aws_subnet.victim_network_subnet] # allow access from the victim subnet
+    cidr_blocks = [aws_subnet.victim_network_subnet.cidr_block] # allow access from the victim subnet
   }
   ingress {
     from_port   = 514 # another common syslog port
     to_port     = 514
     protocol    = "tcp"
-    cidr_blocks = [aws_subnet.victim_network_subnet] # allow access from the victim subnet
+    cidr_blocks = [aws_subnet.victim_network_subnet.cidr_block] # allow access from the victim subnet
   }
   ingress {
     from_port   = 22
