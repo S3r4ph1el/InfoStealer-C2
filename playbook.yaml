@@ -1,0 +1,53 @@
+---
+- name: Change hostname in victim VM
+  hosts: victim
+  become: true
+  tasks:
+    - name: Change hostname
+      ansible.builtin.command:
+        cmd: hostnamectl set-hostname victim
+        
+- name: Change hostname in attacker VM
+  hosts: attacker
+  become: true
+  tasks:
+    - name: Change hostname
+      ansible.builtin.command:
+        cmd: hostnamectl set-hostname attacker
+
+- name: Change hostname in wazuh VM
+  hosts: wazuh
+  become: true
+  tasks:
+    - name: Change hostname
+      ansible.builtin.command:
+        cmd: hostnamectl set-hostname wazuh
+
+
+- name: Send attack files to the attacker VM
+  hosts: attacker
+  become: true
+  tasks:
+    - name: Copy c2_server.py
+      ansible.builtin.copy:
+        src: ./c2_server.py
+        dest: /home/ubuntu/
+        mode: '0644'
+        owner: ubuntu
+        group: ubuntu
+      
+    - name: Copy stealer_client.py
+      ansible.builtin.copy:
+        src: ./app/stealer_client.py
+        dest: /home/ubuntu/
+        mode: '0644'
+        owner: ubuntu
+        group: ubuntu
+
+    - name: Copy BadUSB script
+      ansible.builtin.copy:
+        src: ./BadUSB.sh
+        dest: /home/ubuntu/
+        mode: '0644'
+        owner: ubuntu
+        group: ubuntu
