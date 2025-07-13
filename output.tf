@@ -1,5 +1,5 @@
 output "vm_victim_ip" {
-  value = aws_instance.vm_web_server.public_ip
+  value = aws_instance.vm_victim.public_ip
 }
 
 output "vm_wazuh_ip" {
