@@ -24,7 +24,7 @@
         cmd: hostnamectl set-hostname wazuh
 
 
-- name: Send attack files to the attacker VM
+- name: Send attack files to the attacker VM and install Flask
   hosts: attacker
   become: true
   tasks:
@@ -52,6 +52,9 @@
         owner: ubuntu
         group: ubuntu
 
+    - name: Install Flask
+      ansible.builtin.shell:
+        cmd: sudo apt install -y python3-flask
 
 - name: Generate simulated sensible data on the victim VM
   hosts: victim
