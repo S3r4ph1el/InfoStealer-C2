@@ -24,11 +24,13 @@ terraform init
 terraform apply -auto-approve
 
 
-# 2. Get the public IPs of the VMs and wazuh private IP
+# 2. Get the public and private IPs of the VMs
 VM_VICTIM_IP=$(terraform output -raw vm_victim_ip)
 VM_WAZUH_IP=$(terraform output -raw vm_wazuh_ip)
 VM_ATTACKER_IP=$(terraform output -raw vm_attacker_ip)
+PRIVATE_IP_VICTIM=$(terraform output -raw vm_victim_private_ip)
 PRIVATE_IP_WAZUH=$(terraform output -raw vm_wazuh_private_ip)
+PRIVATE_IP_ATTACKER=$(terraform output -raw vm_attacker_private_ip)
 
 
 # 3. Create the Ansible inventory file
@@ -59,7 +61,9 @@ cat ansible.cfg
 # 5. Create the Ansible variables file
 cat > ansible_vars.yaml <<EOF
 ---
+victim_ip: "${PRIVATE_IP_VICTIM}"
 wazuh_ip: "${PRIVATE_IP_WAZUH}"
+attacker_ip: "${PRIVATE_IP_ATTACKER}"
 EOF
 
 # 5. Runs Ansible playbook
