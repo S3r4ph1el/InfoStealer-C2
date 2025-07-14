@@ -51,3 +51,14 @@
         mode: '0644'
         owner: ubuntu
         group: ubuntu
+
+
+- name: Generate simulated sensible data on the victim VM
+  hosts: victim
+  become: true
+  tasks:
+    - name: Copy the script to the vm
+      copy:
+        src: ./seed_sensitive_files.sh
+        dest: /tmp/seed_sensitive_files.sh
+        mode: '0755'
