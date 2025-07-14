@@ -79,7 +79,7 @@ The project simulates a multi-stage attack, including the following key componen
       This can rarely happen when running `deploy.sh`. If it does, simply run the script again.
 
 8. **Manual Fix**
-    - On the victim VM, you need to run a script to seed the sensitive data in the machine:
+    - On the victim **and** protected VMs, you need to run a script to seed the sensitive data in the machines:
       ```bash
       cd /tmp && ./seed_sensitive_files.sh
       ```

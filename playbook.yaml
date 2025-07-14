@@ -6,6 +6,14 @@
     - name: Change hostname
       ansible.builtin.command:
         cmd: hostnamectl set-hostname victim
+
+- name: Change hostname in protected VM
+  hosts: protected
+  become: true
+  tasks:
+    - name: Change hostname
+      ansible.builtin.command:
+        cmd: hostnamectl set-hostname protected
         
 - name: Change hostname in attacker VM
   hosts: attacker
@@ -56,8 +64,8 @@
       ansible.builtin.shell:
         cmd: sudo apt install -y python3-flask
 
-- name: Generate simulated sensible data on the victim VM
-  hosts: victim
+- name: Generate simulated sensible data on the victims VMs
+  hosts: victim, protected
   become: true
   tasks:
     - name: Copy the script to the vm
@@ -130,8 +138,8 @@
         enabled: true
 
 
-- name: Install and configure Wazuh Agent on victim VM
-  hosts: victim
+- name: Install and configure Wazuh Agent on protected VM
+  hosts: protected
   become: true
   vars_files:
     - ansible_vars.yaml

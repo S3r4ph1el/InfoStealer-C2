@@ -44,7 +44,7 @@ resource "aws_subnet" "attacker_subnet" {
   }
 }
 
-# create the security group for the victim VM
+# create the security group for the victims VM
 resource "aws_security_group" "victim_sg" {
   name        = "victim-sg"
   description = "Security group for the victim vm"
@@ -199,7 +199,21 @@ resource "aws_instance" "vm_victim" {
 
   tags = {
     Name        = "vm-victim"
-    description = "This VM hosts the 'Enterprise PC' that the attacker will try to exploit"
+    description = "This VM hosts the unsafe PC that the attacker will try to exploit"
+  }
+}
+
+resource "aws_instance" "vm_protected" {
+  ami                         = var.ami_id
+  instance_type               = var.vm_type
+  subnet_id                   = aws_subnet.victim_network_subnet.id
+  vpc_security_group_ids      = [aws_security_group.victim_sg.id]
+  associate_public_ip_address = true
+  key_name                    = var.key_name
+
+  tags = {
+    Name        = "vm-protected"
+    description = "This VM hosts the safe PC that the attacker will try to exploit"
   }
 }
 

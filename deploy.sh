@@ -26,9 +26,11 @@ terraform apply -auto-approve
 
 # 2. Get the public and private IPs of the VMs
 VM_VICTIM_IP=$(terraform output -raw vm_victim_ip)
+VM_PROTECTED_IP=$(terraform output -raw vm_protected_ip)
 VM_WAZUH_IP=$(terraform output -raw vm_wazuh_ip)
 VM_ATTACKER_IP=$(terraform output -raw vm_attacker_ip)
 PRIVATE_IP_VICTIM=$(terraform output -raw vm_victim_private_ip)
+PRIVATE_IP_PROTECTED=$(terraform output -raw vm_protected_private_ip)
 PRIVATE_IP_WAZUH=$(terraform output -raw vm_wazuh_private_ip)
 PRIVATE_IP_ATTACKER=$(terraform output -raw vm_attacker_private_ip)
 
@@ -37,6 +39,8 @@ PRIVATE_IP_ATTACKER=$(terraform output -raw vm_attacker_private_ip)
 cat > hosts <<EOF
 [victim]
 ${VM_VICTIM_IP}
+[protected]
+${VM_PROTECTED_IP}
 [wazuh]
 ${VM_WAZUH_IP}
 [attacker]
@@ -62,6 +66,7 @@ cat ansible.cfg
 cat > ansible_vars.yaml <<EOF
 ---
 victim_ip: "${PRIVATE_IP_VICTIM}"
+protected_ip: "${PRIVATE_IP_PROTECTED}"
 wazuh_ip: "${PRIVATE_IP_WAZUH}"
 attacker_ip: "${PRIVATE_IP_ATTACKER}"
 EOF
