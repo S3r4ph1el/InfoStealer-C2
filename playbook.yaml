@@ -172,6 +172,24 @@
         name: wazuh-agent
         state: present
 
+    - name: Configure Wazuh Agent ossec.conf for infostealer detection
+      ansible.builtin.blockinfile:
+        path: /var/ossec/etc/ossec.conf
+        marker: ""
+        insertafter: '</rootcheck>'
+        block: |
+          <localfile>
+            <log_format>command</log_format>
+            <command>ps aux</command>
+            <frequency>30</frequency>
+          </localfile>
+
+          <localfile>
+            <log_format>command</log_format>
+            <command>netstat -tunp</command>
+            <frequency>30</frequency>
+          </localfile>
+
     - name: Configure agent to point to manager
       ansible.builtin.blockinfile:
         path: /var/ossec/etc/ossec.conf
@@ -194,3 +212,9 @@
 
     - name: Save current iptables rules
       ansible.builtin.shell: iptables-save > /etc/iptables/rules.v4
+      
+    - name: Enable and start Wazuh Agent
+      ansible.builtin.service:
+        name: wazuh-agent
+        state: started
+        enabled: true
