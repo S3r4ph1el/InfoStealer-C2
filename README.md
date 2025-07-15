@@ -72,11 +72,24 @@ The project simulates a multi-stage attack, including the following key componen
       ```
 
 7. **Troubleshooting**
-    - If you see an error like:
+    - **Connection timeout during deployment:**
+      If you see an error like:
       ```
       fatal: [<IP>]: UNREACHABLE! => {"changed": false, "msg": "Failed to connect to the host via ssh: ssh: connect to host <IP> port 22: Connection timed out", "unreachable": true}
       ```
       This can rarely happen when running `deploy.sh`. If it does, simply run the script again.
+
+    - **Wazuh active response scripts permission error:**
+      If the deployment fails with permission errors for Wazuh active response scripts:
+      ```
+      failed: [<WAZUH_IP>] => {"msg": "chgrp failed: failed to look up group ossec"}
+      ```
+      This happens when the scripts are copied before the Wazuh service creates the proper groups. To fix:
+      ```bash
+      ssh -i /path/to/your/key.pem ubuntu@<WAZUH_IP>
+      sudo chown -R root:wazuh /var/ossec/active-response/bin/
+      sudo systemctl restart wazuh-manager
+      ```
 
 8. **Manual Fix**
     - On the victim **and** protected VMs, you need to run a script to seed the sensitive data in the machines:
@@ -101,12 +114,39 @@ The project simulates a multi-stage attack, including the following key componen
         ```
 - **WARNING: If you do NOT destroy the infrastructure after use, AWS may CHARGE YOU for active resources if you exceed the AWS Free Tier limits!**
 
+## 💾 Storage and Free Tier Considerations
+
+- **VM Storage:** The Wazuh VM is configured with 30GB of storage to accommodate the Wazuh Manager installation and logs
+- **Free Tier Limits:** AWS Free Tier includes 30GB of EBS storage, so this configuration stays within limits
+- **Disk Space Management:** Wazuh generates logs and can consume significant disk space over time. Monitor usage with:
+  ```bash
+  ssh -i /path/to/your/key.pem ubuntu@<WAZUH_IP> "df -h"
+  ```
+- **Storage Optimization:** If you need to extend usage, consider implementing log rotation and cleanup policies
+
 
 > **NOTE:** While this setup is designed to stay within AWS Free Tier limits, you may incur small charges (a few cents) for data transfer.
 
 ## 🛡️ Detection and Mitigation Strategies
 
 The project emphasizes proposing comprehensive solutions for detecting, preventing, and mitigating the simulated attack.
+
+### **🔍 Dynamic Threat Detection**
+The system uses **Zero Trust** principles and **real-time monitoring** to detect threats:
+
+* **Network Behavior Analysis**: Monitors all network connections and flags external IPs contacted by Python processes
+* **Dynamic IP Blocking**: Automatically blocks IPs when suspicious C2 communication is detected
+* **Behavioral Patterns**: Identifies infostealer patterns (file access + network communication + persistence)
+* **No Pre-configured Targets**: The system discovers threats organically without knowing attacker IPs in advance
+
+### **⚡ Automated Response Actions**
+When threats are detected, the system automatically:
+
+1. **Kills malicious Python processes** immediately
+2. **Disables suspicious systemd services** 
+3. **Blocks C2 communication** via iptables rules
+4. **Quarantines malicious files** for analysis
+5. **Logs all activities** for forensic investigation
 
 * **Technical Controls:** Firewall, EDR/Antivirus, OS hardening, log monitoring, network traffic analysis (IDS/IPS).
 * **Operational Measures:** Incident Response Plan (IRP), threat hunting, backups.
