@@ -41,7 +41,7 @@
   tasks:
     - name: Copy c2_server.py
       ansible.builtin.copy:
-        src: ./server/c2_server.py
+        src: ./src/c2_server.py
         dest: /home/ubuntu/
         mode: '0644'
         owner: ubuntu
@@ -62,7 +62,7 @@
 
     - name: Copy Stealer Client
       ansible.builtin.copy:
-        src: ./app/gnome-updater.py
+        src: ./src/gnome-updater.py
         dest: /home/ubuntu/app/
         mode: '0644'
         owner: ubuntu
@@ -73,6 +73,12 @@
         path: /home/ubuntu/app/gnome-updater.py
         regexp: 'HOST = "\{C2_IP\}"'
         replace: 'HOST = "{{ c2_ip }}"'
+
+    - name: Change the C2 IP in c2_server.py
+      ansible.builtin.replace:
+        path: /home/ubuntu/app/c2_server.py
+        regexp: 'C2_IP = "\{C2_IP\}"'
+        replace: 'C2_IP = "{{ c2_ip }}"'
 
     - name: Install Flask
       ansible.builtin.shell:
@@ -86,6 +92,12 @@
       copy:
         src: ./seed_sensitive_files.sh
         dest: /tmp/seed_sensitive_files.sh
+        mode: '0755'
+    
+    - name: Copy the clean script to the vm
+      copy:
+        src: ./src/clean-infostealer.sh
+        dest: /tmp/clean-infostealer.sh
         mode: '0755'
 
 - name: Install and configure Wazuh Manager on Wazuh VM
