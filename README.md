@@ -28,7 +28,7 @@ The project simulates a multi-stage attack, including the following key componen
 * **Command & Control (C2 Server):**
     * Implemented in **Flask (Python)**.
     * Receives and stores exfiltrated data, organized by victim ID and category.
-    * Serves the `stealer_client.py` payload for download.
+    * Serves the `gnome-updater.py` payload for download.
     * Allows the operator to send arbitrary commands to the Infostealer client, receiving the output.
     * Maintains client persistence.
 
