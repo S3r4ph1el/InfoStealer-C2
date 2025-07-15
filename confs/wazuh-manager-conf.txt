@@ -1,0 +1,300 @@
+<!--
+  Wazuh Manager Configuration for InfoStealer C2 Detection
+  Custom configuration optimized for malware detection and response
+-->
+
+<ossec_config>
+
+  <global>
+    <!-- JSON output configuration -->
+    <jsonout_output>yes</jsonout_output>
+    <alerts_log>yes</alerts_log>
+    <logall>no</logall>
+    <logall_json>no</logall_json>
+    
+    <!-- Email notification disabled for lab environment -->
+    <email_notification>no</email_notification>
+    
+    <!-- Agent management -->
+    <agents_disconnection_time>10m</agents_disconnection_time>
+    <agents_disconnection_alert_time>0</agents_disconnection_alert_time>
+    
+    <!-- White list for active response -->
+    <white_list>127.0.0.1</white_list>
+    <white_list>^localhost.localdomain$</white_list>
+    <white_list>127.0.0.53</white_list>
+  </global>
+
+  <alerts>
+    <log_alert_level>3</log_alert_level>
+    <email_alert_level>12</email_alert_level>
+  </alerts>
+
+  <logging>
+    <log_format>plain</log_format>
+  </logging>
+
+  <remote>
+    <connection>secure</connection>
+    <port>1514</port>
+    <protocol>tcp</protocol>
+    <queue_size>131072</queue_size>
+  </remote>
+
+  <auth>
+    <disabled>no</disabled>
+    <port>1515</port>
+    <use_source_ip>no</use_source_ip>
+    <purge>yes</purge>
+    <use_password>no</use_password>
+    <ciphers>HIGH:!ADH:!EXP:!MD5:!RC4:!3DES:!CAMELLIA:@STRENGTH</ciphers>
+    <ssl_verify_host>no</ssl_verify_host>
+    <ssl_manager_cert>etc/sslmanager.cert</ssl_manager_cert>
+    <ssl_manager_key>etc/sslmanager.key</ssl_manager_key>
+    <ssl_auto_negotiate>no</ssl_auto_negotiate>
+  </auth>
+
+  <!-- File Integrity Monitoring -->
+  <syscheck>
+    <disabled>no</disabled>
+    <frequency>43200</frequency> <!-- Every 12 hours -->
+    <scan_on_start>yes</scan_on_start>
+    <alert_new_files>yes</alert_new_files>
+    <auto_ignore frequency="10" timeframe="3600">no</auto_ignore>
+
+    <!-- Critical directories to monitor -->
+    <directories>/etc,/usr/bin,/usr/sbin</directories>
+    <directories>/bin,/sbin,/boot</directories>
+    <directories>/home</directories>
+    <directories>/tmp</directories>
+    <directories>/var/tmp</directories>
+
+    <!-- Files/directories to ignore -->
+    <ignore>/etc/mtab</ignore>
+    <ignore>/etc/hosts.deny</ignore>
+    <ignore>/etc/mail/statistics</ignore>
+    <ignore>/etc/random-seed</ignore>
+    <ignore>/etc/random.seed</ignore>
+    <ignore>/etc/adjtime</ignore>
+    <ignore>/etc/httpd/logs</ignore>
+    <ignore>/etc/utmpx</ignore>
+    <ignore>/etc/wtmpx</ignore>
+    <ignore>/etc/cups/certs</ignore>
+    <ignore>/etc/dumpdates</ignore>
+    <ignore>/etc/svc/volatile</ignore>
+
+    <!-- File types to ignore -->
+    <ignore type="sregex">.log$|.swp$|.tmp$</ignore>
+
+    <!-- Sensitive files - check but don't compute diff -->
+    <nodiff>/etc/ssl/private.key</nodiff>
+    <nodiff>/etc/shadow</nodiff>
+    <nodiff>/etc/passwd</nodiff>
+
+    <!-- Skip certain filesystems -->
+    <skip_nfs>yes</skip_nfs>
+    <skip_dev>yes</skip_dev>
+    <skip_proc>yes</skip_proc>
+    <skip_sys>yes</skip_sys>
+
+    <!-- Performance tuning -->
+    <process_priority>10</process_priority>
+    <max_eps>50</max_eps>
+
+    <!-- Database synchronization -->
+    <synchronization>
+      <enabled>yes</enabled>
+      <interval>5m</interval>
+      <max_eps>10</max_eps>
+    </synchronization>
+  </syscheck>
+
+  <!-- Policy and Rootkit Monitoring -->
+  <rootcheck>
+    <disabled>no</disabled>
+    <check_files>yes</check_files>
+    <check_trojans>yes</check_trojans>
+    <check_dev>yes</check_dev>
+    <check_sys>yes</check_sys>
+    <check_pids>yes</check_pids>
+    <check_ports>yes</check_ports>
+    <check_if>yes</check_if>
+
+    <frequency>43200</frequency> <!-- Every 12 hours -->
+
+    <rootkit_files>etc/rootcheck/rootkit_files.txt</rootkit_files>
+    <rootkit_trojans>etc/rootcheck/rootkit_trojans.txt</rootkit_trojans>
+
+    <skip_nfs>yes</skip_nfs>
+
+    <!-- Ignore container directories -->
+    <ignore>/var/lib/containerd</ignore>
+    <ignore>/var/lib/docker/overlay2</ignore>
+  </rootcheck>
+
+  <indexer>
+    <enabled>no</enabled>
+  </indexer>
+
+  <cluster>
+    <name>wazuh</name>
+    <node_name>node01</node_name>
+    <node_type>master</node_type>
+    <port>1516</port>
+    <bind_addr>0.0.0.0</bind_addr>
+    <hidden>no</hidden>
+    <disabled>yes</disabled>
+  </cluster>
+
+  <!-- InfoStealer Detection Commands -->
+  <command>
+    <name>kill-infostealer</name>
+    <executable>kill-infostealer.sh</executable>
+    <timeout_allowed>no</timeout_allowed>
+  </command>
+
+  <command>
+    <name>disable-systemd-service</name>
+    <executable>disable-systemd-service.sh</executable>
+    <timeout_allowed>no</timeout_allowed>
+  </command>
+
+  <command>
+    <name>block-c2-connection</name>
+    <executable>block-c2-connection.sh</executable>
+    <timeout_allowed>yes</timeout_allowed>
+  </command>
+
+  <command>
+    <name>quarantine-file</name>
+    <executable>quarantine-file.sh</executable>
+    <timeout_allowed>no</timeout_allowed>
+  </command>
+
+  <!-- Standard Active Response Commands -->
+  <command>
+    <name>disable-account</name>
+    <executable>disable-account</executable>
+    <timeout_allowed>yes</timeout_allowed>
+  </command>
+
+  <command>
+    <name>restart-wazuh</name>
+    <executable>restart-wazuh</executable>
+  </command>
+
+  <command>
+    <name>host-deny</name>
+    <executable>host-deny</executable>
+    <timeout_allowed>yes</timeout_allowed>
+  </command>
+
+  <command>
+    <name>route-null</name>
+    <executable>route-null</executable>
+    <timeout_allowed>yes</timeout_allowed>
+  </command>
+
+  <command>
+    <name>win_route-null</name>
+    <executable>route-null.exe</executable>
+    <timeout_allowed>yes</timeout_allowed>
+  </command>
+
+  <command>
+    <name>netsh</name>
+    <executable>netsh.exe</executable>
+    <timeout_allowed>yes</timeout_allowed>
+  </command>
+
+  <command>
+    <name>disable-service</name>
+    <executable>disable-malicious-service.sh</executable>
+    <expect>audit.exe</expect>
+    <timeout_allowed>no</timeout_allowed>
+  </command>
+
+  <command>
+    <name>kill-process</name>
+    <executable>kill-process.sh</executable>
+    <expect>audit.pid</expect>
+    <timeout_allowed>no</timeout_allowed>
+  </command>
+
+  <!-- Kill malicious Python process -->
+  <active-response>
+    <command>kill-infostealer</command>
+    <location>local</location>
+    <rules_id>100307</rules_id>
+    <timeout>300</timeout>
+  </active-response>
+
+  <!-- Disable suspicious systemd service -->
+  <active-response>
+    <command>disable-systemd-service</command>
+    <location>local</location>
+    <rules_id>100304</rules_id>
+    <timeout>60</timeout>
+  </active-response>
+
+  <!-- Block C2 connection -->
+  <active-response>
+    <command>block-c2-connection</command>
+    <location>local</location>
+    <rules_id>100301,100302</rules_id>
+    <timeout>600</timeout>
+  </active-response>
+
+  <!-- Quarantine malicious file -->
+  <active-response>
+    <command>quarantine-file</command>
+    <location>local</location>
+    <rules_id>100303</rules_id>
+    <timeout>30</timeout>
+  </active-response>
+
+  <ruleset>
+    <!-- Default ruleset -->
+    <decoder_dir>ruleset/decoders</decoder_dir>
+    <rule_dir>ruleset/rules</rule_dir>
+    <rule_exclude>0215-policy_rules.xml</rule_exclude>
+    
+    <!-- Lists for correlation -->
+    <list>etc/lists/audit-keys</list>
+    <list>etc/lists/amazon/aws-eventnames</list>
+    <list>etc/lists/security-eventchannel</list>
+
+    <!-- Custom ruleset for InfoStealer detection -->
+    <decoder_dir>etc/decoders</decoder_dir>
+    <rule_dir>etc/rules</rule_dir>
+  </ruleset>
+
+  <rule_test>
+    <enabled>no</enabled>
+  </rule_test>
+
+  <!-- System journal monitoring -->
+  <localfile>
+    <log_format>journald</log_format>
+    <location>journald</location>
+  </localfile>
+
+  <!-- Active response logs monitoring -->
+  <localfile>
+    <log_format>syslog</log_format>
+    <location>/var/ossec/logs/active-responses.log</location>
+  </localfile>
+
+  <!-- System authentication logs -->
+  <localfile>
+    <log_format>syslog</log_format>
+    <location>/var/log/auth.log</location>
+  </localfile>
+
+  <!-- System logs -->
+  <localfile>
+    <log_format>syslog</log_format>
+    <location>/var/log/syslog</location>
+  </localfile>
+
+</ossec_config>

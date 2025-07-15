@@ -1,0 +1,84 @@
+# Lista de IPs e redes confiáveis (Zero Trust)
+# Formato: IP:descrição ou REDE/CIDR:descrição
+
+# Localhost
+127.0.0.1:localhost
+::1:localhost_ipv6
+
+# Rede interna do laboratório
+172.16.0.0/16:lab_internal_network
+
+# Redes privadas RFC 1918
+10.0.0.0/8:private_network_class_a
+192.168.0.0/16:private_network_class_c
+
+# DNS servers confiáveis (exemplo)
+8.8.8.8:google_dns_primary
+8.8.4.4:google_dns_secondary
+1.1.1.1:cloudflare_dns
+
+# Sites comuns e legítimos
+# Google Services
+142.250.0.0/16:google_services
+172.217.0.0/16:google_services_alt
+216.58.192.0/19:google_youtube
+
+# Repositórios Debian/Ubuntu
+151.101.0.0/16:debian_repos
+185.125.190.36:debian_security
+199.232.0.0/16:debian_fastly_cdn
+151.101.1.140:packages_debian_org
+91.189.88.0/22:ubuntu_repos
+91.189.95.83:archive_ubuntu_com
+
+# GitHub
+140.82.112.0/20:github_main
+185.199.108.0/22:github_pages
+
+# Stack Overflow / Stack Exchange
+151.101.1.69:stackoverflow
+151.101.65.69:stackexchange
+
+# Mozilla / Firefox
+63.245.208.0/20:mozilla_services
+
+# Microsoft (para atualizações)
+13.107.42.14:microsoft_update
+40.76.4.15:microsoft_services
+
+# Canonical (Ubuntu)
+91.189.91.38:canonical_ubuntu
+91.189.91.39:canonical_launchpad
+
+# Python Package Index (PyPI)
+151.101.0.223:pypi_python_org
+151.101.64.223:pypi_fastly
+
+# Docker Hub
+54.230.0.0/16:docker_hub_cdn
+52.1.0.0/16:docker_registry
+
+# CloudFlare CDN (comum para muitos sites)
+104.16.0.0/13:cloudflare_cdn
+172.64.0.0/13:cloudflare_cdn_alt
+
+# Amazon CloudFront (CDN comum)
+54.230.0.0/16:amazon_cloudfront
+54.239.128.0/18:amazon_cloudfront_alt
+
+# Servidores corporativos/institucionais (ajuste conforme necessário)
+# 203.0.113.0/24:corporate_network
+
+# Wazuh Manager (ajuste conforme IP do seu manager)
+172.16.10.222:wazuh_manager
+
+# ====================================================================
+# OBSERVAÇÕES IMPORTANTES:
+# ====================================================================
+# 1. Esta lista é usada pelas regras de Wazuh para implementar Zero Trust
+# 2. Conexões para IPs NÃO listados aqui gerarão alertas de nível 12+
+# 3. Conexões para IPs listados aqui gerarão logs de auditoria (nível 3)
+# 4. Para adicionar novos sites confiáveis, use o formato: IP:descrição
+# 5. Para redes, use CIDR: 192.168.1.0/24:minha_rede
+# 6. Teste sempre após modificações: ausearch -k network_connection
+# ====================================================================

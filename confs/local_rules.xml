@@ -1,0 +1,117 @@
+<group name="infostealer,preventive_security,hardening">
+
+  <!-- Regra base para capturar todas as conexões de rede -->
+  <rule id="100300" level="3">
+    <if_group>audit</if_group>
+    <field name="audit.key">network_connection</field>
+    <description>Conexão de rede detectada para $(audit.addr).</description>
+  </rule>
+
+  <!-- Zero Trust: Bloquear conexões para IPs NÃO CONFIÁVEIS -->
+  <rule id="100301" level="12">
+    <if_sid>100300</if_sid>
+    <!-- Negar IPs de redes privadas, localhost e serviços confiáveis -->
+    <field name="audit.addr" negate="yes">^127\.0\.0\.1$|^172\.16\.|^10\.|^192\.168\.|^::1$|^8\.8\.8\.8$|^8\.8\.4\.4$|^1\.1\.1\.1$|^142\.250\.|^172\.217\.|^216\.58\.192\.|^151\.101\.|^185\.125\.190\.36$|^199\.232\.|^91\.189\.88\.|^91\.189\.95\.83$|^140\.82\.112\.|^185\.199\.108\.|^63\.245\.208\.|^13\.107\.42\.14$|^40\.76\.4\.15$|^91\.189\.91\.|^104\.16\.|^172\.64\.|^54\.230\.|^54\.239\.128\.|^52\.1\.</field>
+    <!-- Negar conexões para portas comuns de administração e serviços legítimos -->
+    <field name="audit.port" negate="yes">^22$|^53$|^80$|^123$|^443$|^514$|^1514$|^1515$</field>
+    <description>🚨 ZERO TRUST VIOLATION: Conexão NÃO AUTORIZADA para IP externo $(audit.addr):$(audit.port) pelo processo $(audit.exe).</description>
+    <mitre>
+      <id>T1071.001</id>
+      <id>T1071.002</id>
+      <id>T1090</id>
+    </mitre>
+  </rule>
+
+  <!-- Alerta específico para portas HTTP/HTTPS suspeitas -->
+  <rule id="100302" level="13">
+    <if_group>audit</if_group>
+    <field name="audit.key">infostealer_c2_connection</field>
+    <description>ALERTA CRÍTICO: Conexão C2 suspeita detectada para $(audit.addr):$(audit.port).</description>
+    <mitre>
+      <id>T1071.001</id>
+      <id>T1071.002</id>
+    </mitre>
+  </rule>
+
+  <rule id="100303" level="12">
+    <if_group>audit</if_group>
+    <field name="audit.key">prevent_theft</field>
+    <description>PREVENÇÃO: Acesso a arquivos sensíveis ($(audit.file.name)) pelo processo '$(audit.exe)' detectado.</description>
+    <mitre>
+      <id>T1555</id>
+      <id>T1552</id>
+    </mitre>
+  </rule>
+
+  <rule id="100304" level="10">
+    <if_group>audit</if_group>
+    <field name="audit.key">systemd_user_service_mod</field>
+    <description>Persistência: Modificação suspeita em Systemd user service.</description>
+    <mitre>
+      <id>T1543.002</id>
+    </mitre>
+  </rule>
+
+  <rule id="100305" level="10">
+    <if_group>audit</if_group>
+    <field name="audit.key">python_exec</field>
+    <description>TTP Detectado: Execução de script Python detectada ('$(audit.exe)').</description>
+    <mitre>
+      <id>T1059.006</id>
+    </mitre>
+  </rule>
+
+  <rule id="100306" level="9">
+    <if_group>audit</if_group>
+    <field name="audit.key">directory_creation</field>
+    <description>TTP Detectado: Criação de diretório potencialmente malicioso.</description>
+    <mitre>
+      <id>T1036.005</id>
+      <id>T1070.004</id>
+    </mitre>
+  </rule>
+
+  <!-- Zero Trust específico para Python fazendo conexões externas -->
+  <rule id="100307" level="13">
+    <if_sid>100301</if_sid>
+    <field name="audit.exe">python|python3</field>
+    <description>CRÍTICO: Script Python $(audit.exe) fazendo conexão NÃO AUTORIZADA para $(audit.addr):$(audit.port) - Possível C2!</description>
+    <mitre>
+      <id>T1071.001</id>
+      <id>T1059.006</id>
+    </mitre>
+  </rule>
+
+  <!-- Zero Trust para processos suspeitos (curl, wget, nc) -->
+  <rule id="100308" level="11">
+    <if_sid>100301</if_sid>
+    <field name="audit.exe">curl|wget|nc|netcat|telnet</field>
+    <description>SUSPEITO: Ferramenta de rede $(audit.exe) fazendo conexão externa para $(audit.addr):$(audit.port).</description>
+    <mitre>
+      <id>T1071.001</id>
+      <id>T1105</id>
+    </mitre>
+  </rule>
+
+  <!-- Regra de auditoria para conexões a sites confiáveis (nível baixo) -->
+  <rule id="100309" level="3">
+    <if_sid>100300</if_sid>
+    <!-- Corresponder apenas IPs de serviços confiáveis -->
+    <field name="audit.addr">^142\.250\.|^172\.217\.|^216\.58\.192\.|^151\.101\.|^185\.125\.190\.36$|^199\.232\.|^91\.189\.88\.|^91\.189\.95\.83$|^140\.82\.112\.|^185\.199\.108\.|^63\.245\.208\.|^13\.107\.42\.14$|^40\.76\.4\.15$|^91\.189\.91\.|^104\.16\.|^172\.64\.|^54\.230\.|^54\.239\.128\.|^52\.1\.</field>
+    <description>✅ AUDIT: Conexão autorizada para serviço confiável $(audit.addr):$(audit.port) pelo processo $(audit.exe).</description>
+  </rule>
+
+  <!-- Regra de correlação para detectar cadeia de ataque completa -->
+  <rule id="100399" level="14" frequency="3" timeframe="300">
+    <if_matched_sid>100301</if_matched_sid>
+    <if_matched_sid>100302</if_matched_sid>
+    <if_matched_sid>100303</if_matched_sid>
+    <if_matched_sid>100304</if_matched_sid>
+    <if_matched_sid>100305</if_matched_sid>
+    <description>ALERTA MÁXIMO: Cadeia de ataque infostealer completa detectada - conexão não autorizada + execução Python + persistência + roubo de dados.</description>
+    <mitre>
+      <id>T1071.001</id><id>T1059.006</id><id>T1543.002</id><id>T1552</id>
+    </mitre>
+  </rule>
+
+</group>

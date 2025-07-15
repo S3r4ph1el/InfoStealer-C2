@@ -1,0 +1,15 @@
+# Lista de IPs de servidores C2 conhecidos para bloqueio automático
+# Formato: um IP por linha
+# Comentários começam com #
+
+# Este arquivo será populado DINAMICAMENTE pelo sistema de detecção
+# quando conexões suspeitas forem identificadas
+
+# IPs de C2 conhecidos publicamente (exemplos fictícios para referência)
+# 185.220.100.240
+# 45.133.1.87
+# 198.211.126.143
+
+# OBSERVAÇÃO: O sistema adicionará automaticamente IPs suspeitos
+# detectados em tempo real através do active response
+# Não é necessário adicionar IPs manualmente aqui
