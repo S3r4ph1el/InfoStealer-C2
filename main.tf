@@ -50,18 +50,6 @@ resource "aws_security_group" "victim_sg" {
   description = "Security group for the victim vm"
   vpc_id      = aws_vpc.info_stealer_c2_vpc.id
   ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  ingress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  ingress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
@@ -119,6 +107,12 @@ resource "aws_security_group" "attacker_sg" {
   name        = "attacker-sg"
   description = "Security group for the attacker vm"
   vpc_id      = aws_vpc.info_stealer_c2_vpc.id
+    ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
   ingress {
     from_port   = 22
     to_port     = 22
@@ -226,7 +220,7 @@ resource "aws_instance" "vm_wazuh" {
   key_name                    = var.key_name
 
   root_block_device {
-    volume_size = 12 # add 4 GB because of the wazuh
+    volume_size = 30 # Extra to Wazuh
     volume_type = "gp3"
   }
 

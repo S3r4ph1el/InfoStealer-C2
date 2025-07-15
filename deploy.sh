@@ -69,6 +69,7 @@ victim_ip: "${PRIVATE_IP_VICTIM}"
 protected_ip: "${PRIVATE_IP_PROTECTED}"
 wazuh_ip: "${PRIVATE_IP_WAZUH}"
 attacker_ip: "${PRIVATE_IP_ATTACKER}"
+c2_ip: "${VM_ATTACKER_IP}"
 EOF
 
 # 5. Runs Ansible playbook

@@ -35,6 +35,9 @@
 - name: Send attack files to the attacker VM and install Flask
   hosts: attacker
   become: true
+  vars_files:
+    - ansible_vars.yaml
+
   tasks:
     - name: Copy c2_server.py
       ansible.builtin.copy:
@@ -44,13 +47,32 @@
         owner: ubuntu
         group: ubuntu
       
+
+    - name: Create directory for app files
+      ansible.builtin.file:
+        path: /home/ubuntu/app
+        state: directory
+        mode: '0755'
+
+    - name: Create directory for uploads
+      ansible.builtin.file:
+        path: /home/ubuntu/uploads
+        state: directory
+        mode: '0755'
+
     - name: Copy Stealer Client
       ansible.builtin.copy:
         src: ./app/gnome-updater.py
-        dest: /home/ubuntu/
+        dest: /home/ubuntu/app/
         mode: '0644'
         owner: ubuntu
         group: ubuntu
+
+    - name: Change the C2 IP in gnome-updater.py
+      ansible.builtin.replace:
+        path: /home/ubuntu/app/gnome-updater.py
+        regexp: 'HOST = "\{C2_IP\}"'
+        replace: 'HOST = "{{ c2_ip }}"'
 
     - name: Install Flask
       ansible.builtin.shell:
@@ -66,10 +88,11 @@
         dest: /tmp/seed_sensitive_files.sh
         mode: '0755'
 
-
 - name: Install and configure Wazuh Manager on Wazuh VM
   hosts: wazuh
   become: true
+  vars_files:
+    - ansible_vars.yaml
 
   tasks:
     - name: Install prerequisites
@@ -104,31 +127,60 @@
         state: present
         update_cache: yes
 
-    - name: Configure Wazuh Manager (active response)
-      ansible.builtin.blockinfile:
-        path: /var/ossec/etc/ossec.conf
-        insertafter: '</client>'
-        marker: ""
-        block: |
-          <command>
-            <name>firewall-drop</name>
-            <executable>firewall-drop.sh</executable>
-            <expect>srcip</expect>
-            <timeout_allowed>yes</timeout_allowed>
-          </command>
-
-          <active-response>
-            <command>firewall-drop</command>
-            <location>local</location>
-            <rules_group>ids</rules_group>
-          </active-response>
-
     - name: Restart and enable Wazuh Manager
       ansible.builtin.service:
         name: wazuh-manager
         state: started
         enabled: true
+    
+    - name: Configure local rules for Wazuh Manager
+      ansible.builtin.copy:
+        src: ./confs/local_rules.xml
+        dest: /var/ossec/etc/rules/local_rules.xml
+        mode: '0644'
 
+    - name: Copy trusted IPs list for zero trust
+      ansible.builtin.copy:
+        src: ./confs/trusted_ips.txt
+        dest: /var/ossec/etc/lists/trusted_ips
+        mode: '0644'
+
+    - name: Copy blocked C2 IPs list
+      ansible.builtin.copy:
+        src: ./confs/blocked_c2_ips.txt
+        dest: /var/ossec/etc/lists/blocked_c2_ips
+        mode: '0644'
+
+    - name: Copy active response scripts
+      ansible.builtin.copy:
+        src: ./active-response-scripts/
+        dest: /var/ossec/active-response/bin/
+        mode: '0755'
+        directory_mode: '0755'
+
+    - name: Ensure active response scripts are executable
+      ansible.builtin.file:
+        path: "/var/ossec/active-response/bin/{{ item }}"
+        mode: '0755'
+        owner: root
+        group: ossec
+      loop:
+        - kill-infostealer.sh
+        - disable-systemd-service.sh
+        - block-c2-connection.sh
+        - quarantine-file.sh
+
+    - name: Copy optimized Wazuh Manager configuration
+      ansible.builtin.copy:
+        src: ./confs/wazuh-manager-conf.txt
+        dest: /var/ossec/etc/ossec.conf
+        mode: '0644'
+        backup: yes
+
+    - name: Restart Wazuh Manager to apply new rules and active response
+      ansible.builtin.service:
+        name: wazuh-manager
+        state: restarted
 
 - name: Install and configure Wazuh Agent on protected VM
   hosts: protected
@@ -172,37 +224,35 @@
         name: wazuh-agent
         state: present
 
-    - name: Configure Wazuh Agent ossec.conf for infostealer detection
-      ansible.builtin.blockinfile:
-        path: /var/ossec/etc/ossec.conf
-        marker: ""
-        insertafter: '</rootcheck>'
-        block: |
-          <localfile>
-            <log_format>command</log_format>
-            <command>ps aux</command>
-            <frequency>30</frequency>
-          </localfile>
+    - name: Install Audit in Protected VM
+      ansible.builtin.apt:
+        name: auditd
+        state: present
+        update_cache: yes
 
-          <localfile>
-            <log_format>command</log_format>
-            <command>netstat -tunp</command>
-            <frequency>30</frequency>
-          </localfile>
+    - name: Start and enable auditd
+      ansible.builtin.service:
+        name: auditd
+        state: started
+        enabled: true
+    
+    - name: Configure auditd rules
+      ansible.builtin.copy:
+        src: ./confs/infostealer.rules
+        dest: /etc/audit/rules.d/audit.rules
+        mode: '0644'
 
-    - name: Configure agent to point to manager
-      ansible.builtin.blockinfile:
-        path: /var/ossec/etc/ossec.conf
-        marker: "# {mark} ANSIBLE MANAGER CONFIG"
-        insertafter: '</syscheck>'
-        block: |
-          <client>
-            <server>
-              <address>{{ wazuh_ip }}</address>
-              <port>1514</port>
-              <protocol>tcp</protocol>
-            </server>
-          </client>
+    - name: Restart auditd to apply rules
+      ansible.builtin.service:
+        name: auditd
+        state: restarted
+
+    - name: Copy optimized Wazuh Agent configuration
+      ansible.builtin.copy:
+        src: ./confs/wazuh-agent-conf.txt
+        dest: /var/ossec/etc/ossec.conf
+        mode: '0644'
+        backup: yes
 
     - name: Install iptables-persistent
       ansible.builtin.apt:
@@ -212,6 +262,14 @@
 
     - name: Save current iptables rules
       ansible.builtin.shell: iptables-save > /etc/iptables/rules.v4
+
+    - name: Copy test script to protected VM
+      ansible.builtin.copy:
+        src: ./scripts/test-wazuh-detection.sh
+        dest: /tmp/test-wazuh-detection.sh
+        mode: '0755'
+        owner: ubuntu
+        group: ubuntu
       
     - name: Enable and start Wazuh Agent
       ansible.builtin.service:
