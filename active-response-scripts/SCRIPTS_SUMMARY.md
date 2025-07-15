@@ -3,48 +3,48 @@
 ## 🛡️ Scripts de Resposta Ativa para Detecção de InfoStealers
 
 ### 1. **kill-infostealer.sh**
-**Função**: Identifica e termina processos Python maliciosos
+**Função**: Identifica e termina processos Python maliciosos<br>
 **Como detecta**:
 - Processos Python fazendo conexões de rede + acessando arquivos sensíveis
 - Processos executando de diretórios temporários (`/tmp`, `/var/tmp`, `/dev/shm`)
-- Processos tentando modificar arquivos de persistência (systemd, bashrc)
+- Processos tentando modificar arquivos de persistência (systemd, bashrc)<br>
 **Ação**: Mata processos com SIGTERM, depois SIGKILL se necessário
 
 ### 2. **quarantine-file.sh**
-**Função**: Localiza e isola arquivos Python suspeitos
+**Função**: Localiza e isola arquivos Python suspeitos<br>
 **Como detecta**:
 - Arquivos Python em locais temporários
 - Arquivos com padrões de código malicioso (`socket`, `http`, `base64`, `encrypt`)
 - Arquivos executáveis recentes em locais incomuns
-- Scripts com capacidades de rede e acesso a dados sensíveis
+- Scripts com capacidades de rede e acesso a dados sensíveis<br>
 **Ação**: Move arquivos para `/var/ossec/quarantine` e remove permissões
 
 ### 3. **disable-systemd-service.sh**
-**Função**: Desabilita serviços systemd maliciosos de usuário
+**Função**: Desabilita serviços systemd maliciosos de usuário<br>
 **Como detecta**:
 - Serviços executando Python de diretórios temporários
 - Serviços sem descrição adequada
 - Configurações de restart excessivamente frequentes
-- Serviços executando de diretórios ocultos
+- Serviços executando de diretórios ocultos<br>
 **Ação**: Para, desabilita e move arquivos de serviço para quarentena
 
 ### 4. **block-c2-connection.sh**
-**Função**: Bloqueia conexões a servidores C2 suspeitos
+**Função**: Bloqueia conexões a servidores C2 suspeitos<br>
 **Como detecta**:
 - Processos Python conectados a IPs externos
 - Processos executando de locais temporários com conexões ativas
-- Validação de legitimidade do path do processo
+- Validação de legitimidade do path do processo<br>
 **Ação**: Bloqueia IPs via iptables e adiciona à lista de IPs bloqueados
 
 ### 5. **watch-suspicious-ips.sh**
-**Função**: Monitora comportamentos suspeitos em tempo real
+**Função**: Monitora comportamentos suspeitos em tempo real<br>
 **Como detecta**:
 - IPs com alta frequência de conexões
 - Processos Python sem path absoluto (possivelmente ofuscados)
 - Acesso excessivo a arquivos sensíveis (`.ssh`, `.gnupg`, `Documents`)
 - Múltiplas conexões TCP ativas de um único processo
 - Novos arquivos Python criados em locais suspeitos
-- Processos executando via stdin/pipes (técnica de evasão)
+- Processos executando via stdin/pipes (técnica de evasão)<br>
 **Ação**: Registra alertas, bloqueia IPs e remove permissões de arquivos suspeitos
 
 ## 🎯 **Estratégia de Detecção**
