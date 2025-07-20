@@ -76,7 +76,7 @@
 
     - name: Change the C2 IP in c2_server.py
       ansible.builtin.replace:
-        path: /home/ubuntu/app/c2_server.py
+        path: /home/ubuntu/c2_server.py
         regexp: 'C2_IP = "\{C2_IP\}"'
         replace: 'C2_IP = "{{ c2_ip }}"'
 
@@ -175,7 +175,6 @@
         path: "/var/ossec/active-response/bin/{{ item }}"
         mode: '0755'
         owner: root
-        group: ossec
       loop:
         - kill-infostealer.sh
         - disable-systemd-service.sh
@@ -288,3 +287,8 @@
         name: wazuh-agent
         state: started
         enabled: true
+
+    - name: Create ossec group
+      ansible.builtin.group:
+        name: ossec
+        state: present
