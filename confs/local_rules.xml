@@ -1,3 +1,4 @@
+<!-- Wazuh Local Rules for InfoStealer Detection -->
 <group name="infostealer,preventive_security,hardening">
 
   <!-- Regra base para capturar todas as conexões de rede -->
@@ -33,29 +34,40 @@
     </mitre>
   </rule>
 
+  <!-- Regra melhorada para acesso a arquivos sensíveis - reduzir falsos positivos -->
   <rule id="100303" level="12">
     <if_group>audit</if_group>
     <field name="audit.key">prevent_theft</field>
-    <description>PREVENÇÃO: Acesso a arquivos sensíveis ($(audit.file.name)) pelo processo '$(audit.exe)' detectado.</description>
+    <!-- Filtrar comandos comuns do sistema que são legítimos -->
+    <field name="audit.exe" negate="yes">^/usr/bin/find$|^/bin/find$|^/usr/bin/locate$|^/usr/bin/updatedb$|^/var/ossec/|^/usr/sbin/|^/sbin/|^/usr/bin/ls$|^/bin/ls$|^/usr/bin/cat$|^/bin/cat$|^/usr/bin/grep$|^/bin/grep$|^/usr/bin/less$|^/usr/bin/more$|^/usr/bin/head$|^/usr/bin/tail$</field>
+    <!-- Filtrar usuário wazuh -->
+    <field name="audit.uid" negate="yes">^113$</field>
+    <!-- Apenas alertar para acessos realmente suspeitos (não navegação normal) -->
+    <field name="audit.syscall">257|2|openat|open</field>
+    <description>PREVENÇÃO: Acesso suspeito a arquivos sensíveis ($(audit.directory.name)) pelo processo '$(audit.exe)' (PID: $(audit.pid)).</description>
     <mitre>
       <id>T1555</id>
       <id>T1552</id>
     </mitre>
   </rule>
 
+  <!-- Detectar modificações em systemd user services -->
   <rule id="100304" level="10">
     <if_group>audit</if_group>
     <field name="audit.key">systemd_user_service_mod</field>
-    <description>Persistência: Modificação suspeita em Systemd user service.</description>
+    <description>⚠️ PERSISTÊNCIA DETECTADA: Modificação em Systemd user service - INVESTIGAR: $(audit.file.name)</description>
     <mitre>
       <id>T1543.002</id>
     </mitre>
   </rule>
 
-  <rule id="100305" level="10">
+  <!-- Detectar execução de Python suspeita -->
+  <rule id="100305" level="8">
     <if_group>audit</if_group>
     <field name="audit.key">python_exec</field>
-    <description>TTP Detectado: Execução de script Python detectada ('$(audit.exe)').</description>
+    <!-- Filtrar scripts legítimos conhecidos -->
+    <field name="audit.cmdline" negate="yes">/usr/bin/|/usr/lib/|apt|dpkg|ubuntu-advantage</field>
+    <description>TTP Detectado: Execução de script Python ('$(audit.exe)') - Comando: $(audit.cmdline)</description>
     <mitre>
       <id>T1059.006</id>
     </mitre>
@@ -64,7 +76,7 @@
   <rule id="100306" level="9">
     <if_group>audit</if_group>
     <field name="audit.key">directory_creation</field>
-    <description>TTP Detectado: Criação de diretório potencialmente malicioso.</description>
+    <description>TTP Detectado: Criação de diretório em local suspeito - $(audit.cwd)</description>
     <mitre>
       <id>T1036.005</id>
       <id>T1070.004</id>
@@ -75,7 +87,7 @@
   <rule id="100307" level="13">
     <if_sid>100301</if_sid>
     <field name="audit.exe">python|python3</field>
-    <description>CRÍTICO: Script Python $(audit.exe) fazendo conexão NÃO AUTORIZADA para $(audit.addr):$(audit.port) - Possível C2!</description>
+    <description>🔥 CRÍTICO: Script Python $(audit.exe) fazendo conexão NÃO AUTORIZADA para $(audit.addr):$(audit.port) - Possível C2!</description>
     <mitre>
       <id>T1071.001</id>
       <id>T1059.006</id>
@@ -101,16 +113,28 @@
     <description>✅ AUDIT: Conexão autorizada para serviço confiável $(audit.addr):$(audit.port) pelo processo $(audit.exe).</description>
   </rule>
 
-  <!-- Regra de correlação para detectar cadeia de ataque completa -->
-  <rule id="100399" level="14" frequency="3" timeframe="300">
-    <if_matched_sid>100301</if_matched_sid>
-    <if_matched_sid>100302</if_matched_sid>
-    <if_matched_sid>100303</if_matched_sid>
-    <if_matched_sid>100304</if_matched_sid>
-    <if_matched_sid>100305</if_matched_sid>
-    <description>ALERTA MÁXIMO: Cadeia de ataque infostealer completa detectada - conexão não autorizada + execução Python + persistência + roubo de dados.</description>
+  <!-- Nova: Detecção de scripts em locais suspeitos -->
+  <rule id="100310" level="14">
+    <if_group>audit</if_group>
+    <field name="audit.key">python_exec</field>
+    <!-- Detectar scripts em locais não convencionais -->
+    <field name="audit.cmdline">\.local/share/|/tmp/|/var/tmp/|/dev/shm/|/home/.*/\.</field>
+    <description>🎭 MASQUERADING: Script suspeito em local não convencional: '$(audit.cmdline)'</description>
     <mitre>
-      <id>T1071.001</id><id>T1059.006</id><id>T1543.002</id><id>T1552</id>
+      <id>T1036.005</id>
+      <id>T1059.006</id>
+    </mitre>
+  </rule>
+
+  <!-- Regra de correlação para detectar cadeia de ataque completa -->
+  <rule id="100399" level="14" frequency="2" timeframe="300">
+    <if_matched_sid>100301,100302,100303,100304,100305</if_matched_sid>
+    <description>🚨 ALERTA MÁXIMO: Cadeia de ataque infostealer completa detectada - conexão não autorizada + execução Python + persistência + roubo de dados.</description>
+    <mitre>
+      <id>T1071.001</id>
+      <id>T1059.006</id>
+      <id>T1543.002</id>
+      <id>T1552</id>
     </mitre>
   </rule>
 

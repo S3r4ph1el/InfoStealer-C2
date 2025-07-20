@@ -18,9 +18,11 @@
 -w /home/ubuntu/secrets_backup.txt     -p rwxa -k prevent_theft
 -w /home/ubuntu/vpn/                   -p rwxa -k prevent_theft
 
-# Detectar execução de scripts Python
--a always,exit -F arch=b64 -S execve -F a0="python3" -k python_exec
--a always,exit -F arch=b32 -S execve -F a0="python3" -k python_exec
+# Detectar execução de scripts Python - CORRIGIDO
+-a always,exit -F arch=b64 -S execve -F exe=/usr/bin/python3 -k python_exec
+-a always,exit -F arch=b32 -S execve -F exe=/usr/bin/python3 -k python_exec
+-a always,exit -F arch=b64 -S execve -F exe=/usr/bin/python -k python_exec
+-a always,exit -F arch=b32 -S execve -F exe=/usr/bin/python -k python_exec
 
 # Detectar criação de diretórios ocultos (persistência)
 -a always,exit -F arch=b64 -S mkdir,mkdirat -k directory_creation
@@ -29,9 +31,9 @@
 # Detectar modificações em Systemd user services
 -w /home/ubuntu/.config/systemd/user/ -p rwxa -k systemd_user_service_mod
 
-# Monitorar TODAS as conexões de rede e filtrar no Wazuh
--a always,exit -F arch=b64 -S connect -F a2=16 -k network_connection
--a always,exit -F arch=b32 -S connect -F a2=16 -k network_connection
+# Monitorar TODAS as conexões de rede - CORRIGIDO
+-a always,exit -F arch=b64 -S connect -k network_connection
+-a always,exit -F arch=b32 -S connect -k network_connection
 
 # Monitorar especificamente conexões HTTP/HTTPS (portas 80, 443, 8080)
 -a always,exit -F arch=b64 -S connect -F a2=16 -F "obj_level_low=80" -k infostealer_c2_connection
@@ -42,13 +44,18 @@
 -a always,exit -F arch=b32 -S connect -F a2=16 -F "obj_level_low=8080" -k infostealer_c2_connection
 
 # Monitorar syscalls de socket para detectar comunicações de rede
--a always,exit -F arch=b64 -S socket -F a0=2 -F a1=1 -k infostealer_c2_connection
--a always,exit -F arch=b32 -S socket -F a0=2 -F a1=1 -k infostealer_c2_connection
+-a always,exit -F arch=b64 -S socket -F a0=2 -F a1=1 -k network_connection
+-a always,exit -F arch=b32 -S socket -F a0=2 -F a1=1 -k network_connection
 
 # Monitorar uso de bibliotecas HTTP em Python (requests, urllib, http.client)
--w /usr/lib/python3*/site-packages/requests/ -p r -k infostealer_c2_connection
--w /usr/lib/python3*/http/ -p r -k infostealer_c2_connection
+-w /usr/lib/python3.12/site-packages/requests/ -p r -k infostealer_c2_connection
+-w /usr/lib/python3/dist-packages/requests/ -p r -k infostealer_c2_connection
+-w /usr/lib/python3.12/http/ -p r -k infostealer_c2_connection
 
 # Monitorar execução de comandos curl/wget suspeitos
 -w /usr/bin/curl -p x -k infostealer_c2_connection
 -w /usr/bin/wget -p x -k infostealer_c2_connection
+
+# Exclusões para reduzir falsos positivos - Wazuh user
+-a never,exit -F uid=113
+-a never,exit -F gid=113

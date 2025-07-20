@@ -93,6 +93,16 @@
         src: ./seed_sensitive_files.sh
         dest: /tmp/seed_sensitive_files.sh
         mode: '0755'
+
+    - name: Ensure seed_sensitive_files.sh is executable
+      ansible.builtin.file:
+        path: /tmp/seed_sensitive_files.sh
+        mode: '0755'
+
+    - name: Run the script to generate sensitive data
+      ansible.builtin.shell: ./seed_sensitive_files.sh
+      args:
+        chdir: /tmp
     
     - name: Copy the clean script to the vm
       copy:
@@ -162,24 +172,6 @@
         src: ./confs/blocked_c2_ips.txt
         dest: /var/ossec/etc/lists/blocked_c2_ips
         mode: '0644'
-
-    - name: Copy active response scripts
-      ansible.builtin.copy:
-        src: ./active-response-scripts/
-        dest: /var/ossec/active-response/bin/
-        mode: '0755'
-        directory_mode: '0755'
-
-    - name: Ensure active response scripts are executable
-      ansible.builtin.file:
-        path: "/var/ossec/active-response/bin/{{ item }}"
-        mode: '0755'
-        owner: root
-      loop:
-        - kill-infostealer.sh
-        - disable-systemd-service.sh
-        - block-c2-connection.sh
-        - quarantine-file.sh
 
     - name: Copy optimized Wazuh Manager configuration
       ansible.builtin.copy:
@@ -259,7 +251,7 @@
         state: restarted
 
     - name: Copy optimized Wazuh Agent configuration
-      ansible.builtin.copy:
+      ansible.builtin.template:
         src: ./confs/wazuh-agent-conf.txt
         dest: /var/ossec/etc/ossec.conf
         mode: '0644'
@@ -281,8 +273,36 @@
         mode: '0755'
         owner: ubuntu
         group: ubuntu
+
+    - name: Copy active response scripts to protected VM
+      ansible.builtin.copy:
+        src: ./active-response-scripts/
+        dest: /var/ossec/active-response/bin/
+        mode: '0755'
+        directory_mode: '0755'
+
+    - name: Ensure active response scripts are executable
+      ansible.builtin.file:
+        path: "/var/ossec/active-response/bin/{{ item }}"
+        mode: '0755'
+        owner: root
+      loop:
+        - kill-infostealer.sh
+        - disable-systemd-service.sh
+        - block-c2-connection.sh
+        - quarantine-file.sh
       
-    - name: Enable and start Wazuh Agent
+    - name: Stop Wazuh Agent before registration
+      ansible.builtin.service:
+        name: wazuh-agent
+        state: stopped
+
+    - name: Register agent with manager using agent-auth
+      ansible.builtin.shell: |
+        /var/ossec/bin/agent-auth -m {{ wazuh_ip }} -A protected
+      ignore_errors: yes
+
+    - name: Start and enable Wazuh Agent
       ansible.builtin.service:
         name: wazuh-agent
         state: started

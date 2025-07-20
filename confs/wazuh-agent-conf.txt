@@ -5,7 +5,7 @@
 <ossec_config>
   <client>
     <server>
-      <address>${var.wazuh_manager_ip}</address>
+      <address>{{ wazuh_ip }}</address>
       <port>1514</port>
       <protocol>tcp</protocol>
     </server>
